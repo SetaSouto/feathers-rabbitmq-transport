@@ -1,6 +1,6 @@
 # Feathers RabbitMQ Transport
 
-Configure a `broker` transport that uses a one-way message broker pattern to use to the services
+Configure a `broker` transport that uses a one-way message broker pattern to use to expose the services
 of the app.
 
 ## Quick start
