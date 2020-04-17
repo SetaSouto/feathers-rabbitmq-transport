@@ -25,12 +25,26 @@ app.configure(brokerTransport({
 }))
 ```
 
+## Configuration
+
+All the configurations can be provided as `env` variables:
+
+- `BROKER_HOST`: To connect to. Example: `localhost`
+- `BROKER_USER`: Optional. For authenticated connections. Example `user`.
+- `BROKER_PASSWORD`: Optional. For authenticated connections. Example: `mypassword`.
+- `BROKER_RETRY_CONNECTION`: Set it as `true` to retry connecting if the first attempt fails.
+- `BROKER_TRANSPORT_EXCHANGE`: The topic exchange to use. See
+[RabbitMQ docs](https://www.rabbitmq.com/tutorials/tutorial-five-javascript.html).
+
+## How it works
+
 The transport is very simple. As it's only one-way it does not implement the `get` and `find` methods.
 It only works with the `create`, `update`, `patch` and `remove` methods.
 
-Each service has a queue for each one of these methods. The exchange to use must be declared in the
-`BROKER_TRANSPORT_EXCHANGE` env variable and any producer can send messages to that exchange with the
-routing keys:
+Each service has a queue for each one of these methods binded with a routing key to a
+[topic exchange](https://www.rabbitmq.com/tutorials/tutorial-five-javascript.html).
+The exchange to use must be declared in the `BROKER_TRANSPORT_EXCHANGE` env variable and any producer
+can send messages to that exchange with the routing keys:
 
 - `<serviceName>.create`: and the data in the message.
 - `<serviceName>.update.<id>`: and the data in the message.
