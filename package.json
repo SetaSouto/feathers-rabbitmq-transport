@@ -1,0 +1,34 @@
+{
+  "name": "feathers-rabbitmq-transport",
+  "version": "0.1.0",
+  "description": "A custom transport for Feathers framework that works with RabbitMQ.",
+  "main": "index.js",
+  "scripts": {
+    "lint": "standard"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SetaSouto/feathers-rabbitmq-transport.git"
+  },
+  "keywords": [
+    "feathers",
+    "rabbitmq",
+    "transport",
+    "message",
+    "broker",
+    "provider"
+  ],
+  "author": "Fabián Souto",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SetaSouto/feathers-rabbitmq-transport/issues"
+  },
+  "homepage": "https://github.com/SetaSouto/feathers-rabbitmq-transport#readme",
+  "devDependencies": {
+    "standard": "^14.3.3"
+  },
+  "dependencies": {
+    "amqplib": "^0.5.5",
+    "winston-namespace": "^1.0.0"
+  }
+}
