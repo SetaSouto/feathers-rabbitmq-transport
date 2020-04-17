@@ -51,21 +51,34 @@ module.exports = ({ services }) => {
       habilitatedServices.push(...Object.keys(services))
     } else {
       habilitatedServices.push(...appServices)
+      // Habilitate all the app's services
+      services = {}
+      appServices.forEach(service => {
+        services[service] = [] // All the methods
+      })
     }
 
     logger.info(`Configuring "Broker" transport for services: ${habilitatedServices}`)
 
     Promise.all(habilitatedServices.map(service => {
       const habilitatedMethods = services[service]
+
+      // No method provided, habilitate all
+      if (!habilitatedMethods.length) {
+        habilitatedMethods.push('create', 'update', 'patch', 'remove')
+      }
+
+      // Map between the service's method and its routing key
       const allKeys = {
         create: `${service}.create`,
         // * to match exact one word (id).
-        // See: https://www.rabbitmq.com/tutorials/tutorial-five-python.html
+        // See: https://www.rabbitmq.com/tutorials/tutorial-five-javascript.html
         update: `${service}.update.*`,
         patch: `${service}.patch.*`,
         remove: `${service}.remove.*`
       }
 
+      // Get the routing keys for this service
       const habilitatedKeys = []
       habilitatedMethods.forEach(method => {
         if (habilitatedMethods.includes(method)) {
