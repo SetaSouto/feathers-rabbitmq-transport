@@ -1,6 +1,6 @@
 {
   "name": "feathers-rabbitmq-transport",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "A custom transport for Feathers framework that works with RabbitMQ.",
   "main": "src/index.js",
   "scripts": {
