@@ -35,6 +35,18 @@ if (app.get('brokerTransportReady')) {
 }
 ```
 
+In in another service/instance/microservice/worker:
+
+```javascript
+// The package also has usefull Consumer and Producer classes but you
+// can use any implementation
+const { Producer } = require('feathers-rabbitmq-transport/src/broker');
+
+const producer = new Producer('<your-exchange>', `<service>.<method>[.<id>]`);
+await producer.connect();
+producer.send(data);
+```
+
 ## Configuration
 
 All the configurations can be provided as `env` variables:
