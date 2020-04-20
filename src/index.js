@@ -29,6 +29,8 @@ if (!BROKER_TRANSPORT_EXCHANGE) {
  * `BROKER_TRANSPORT_EXCHANGE` exchange.
  *
  * For the `params` object of the methods we only provide the `provider` property as `broker`.
+ * 
+ * It also sets the `brokerTransportReady` setting in the app and the event with the same name.
  *
  * @param {Object} [options.services] explicitly declare which services with which methods must be
  *  exposed through this transport. If no `services` object is given it will expose all the services.
@@ -43,6 +45,7 @@ if (!BROKER_TRANSPORT_EXCHANGE) {
  */
 module.exports = ({ services }) => {
   return app => {
+    app.set('brokerTransportReady', false)
     const appServices = Object.keys(app.services)
     const habilitatedServices = []
     const logger = createLogger('configure')
@@ -111,7 +114,10 @@ module.exports = ({ services }) => {
         } catch (err) {
           logger.error(err)
         }
-      })).then(() => app.emit('brokerTransportReady'))
+      })).then(() => {
+        app.set('brokerTransportReady', true)
+        app.emit('brokerTransportReady')
+      })
     }))
   }
 }

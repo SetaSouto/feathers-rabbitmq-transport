@@ -28,6 +28,11 @@ app.configure(brokerTransport({
 app.on('brokerTransportReady', () => {
   // perform a side effect
 })
+
+// Or check if the consumers are ready
+if (app.get('brokerTransportReady')) {
+  // do something
+}
 ```
 
 ## Configuration
@@ -90,6 +95,7 @@ provide them like:
 ## `brokerTransportReady` event
 
 Is a simple event emitted using the `app` after all the consumers are ready and it does not contains any data.
+The package will set the `brokerTransportReady` setting in the app as `true` when its ready too.
 
 ## Author
 
