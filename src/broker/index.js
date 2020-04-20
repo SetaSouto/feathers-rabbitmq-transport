@@ -1,5 +1,5 @@
 const amqp = require('amqplib')
-const logger = require('../logger')('connections:broker')
+const logger = require('../logger')('broker')
 
 const {
   BROKER_HOST, BROKER_USER, BROKER_PASSWORD, BROKER_RETRY_CONNECTION
