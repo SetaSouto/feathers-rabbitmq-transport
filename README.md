@@ -23,6 +23,11 @@ app.configure(brokerTransport({
     otherService: ['create', 'patch'], // Only create and patch methods
   }
 }))
+
+// Perform a side effect after connection
+app.on('brokerTransportReady', () => {
+  // perform a side effect
+})
 ```
 
 ## Configuration
@@ -81,6 +86,10 @@ provide them like:
   serviceName: [],  // All the methods
 }
 ```
+
+## `brokerTransportReady` event
+
+Is a simple event emitted using the `app` after all the consumers are ready and it does not contains any data.
 
 ## Author
 

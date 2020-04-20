@@ -111,7 +111,7 @@ module.exports = ({ services }) => {
         } catch (err) {
           logger.error(err)
         }
-      }))
+      })).then(() => app.emit('brokerTransportReady'))
     }))
   }
 }
