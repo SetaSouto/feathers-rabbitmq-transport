@@ -1,5 +1,5 @@
 const createLogger = require('./logger')
-const { Consumer } = require('./broker')
+const { Consumer, Producer } = require('./broker')
 
 const { BROKER_TRANSPORT_EXCHANGE } = process.env
 
