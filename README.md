@@ -11,17 +11,37 @@ npm i feathers-rabbitmq-transport
 
 ```javascript
 // In your app.js
-const brokerTransport = require('feathers-rabbitmq-transport')
+const broker = require('feathers-rabbitmq-transport')
 
-// Expose all the services through RabbitMQ
-app.configure(brokerTransport())
+// Expose all the services through RabbitMQ and connecting according
+// to the environment variables
+app.configure(broker.configure())
 
 // Expose only some services
-app.configure(brokerTransport({
+app.configure(broker.configure({
   sevices: {
     serviceName: [], // All the methods
     otherService: ['create', 'patch'], // Only create and patch methods
   }
+}))
+
+// Configure with more options
+app.configure(broker.configure({
+  connection: {
+    host: 'myrabbitmq.com', // Default to process.env.BROKER_HOST
+    user: 'user', // default to process.env.BROKER_USER
+    password: 'password', // default to process.env.BROKER_PASSWORD
+    retry: false, // default to process.env.BROKER_RETRY_CONNECTION === 'true',
+  },
+  // Configure the prefetch value. Once there are 100 messages outstanding
+  // the RabbitMQ server will not send more messages to the method consumer
+  // until one ore more have been acknowledge (that is when the method call
+  // returns).
+  prefetch: 100,
+  // Add a postfix to the queue names.
+  // This will transform the queue's names from '<service>-<method>' to
+  // '<service>-<method><postfix>'.
+  queuePostfix: '-development',
 }))
 
 // Perform a side effect after connection
@@ -35,21 +55,23 @@ if (app.get('brokerTransportReady')) {
 }
 ```
 
-In in another service/instance/microservice/worker:
+In another service/instance/microservice/worker:
 
 ```javascript
 // The package also has usefull Consumer and Producer classes but you
 // can use any implementation
-const { Producer } = require('feathers-rabbitmq-transport/src/broker');
+const { Producer } = require('feathers-rabbitmq-transport');
 
-const producer = new Producer('<your-exchange>', `<service>.<method>[.<id>]`);
+const producer = new Producer('<your-exchange>', { key: '<service>.<method>[.<id>]' });
 await producer.connect();
 producer.send(data);
 ```
 
 ## Configuration
 
-All the configurations can be provided as `env` variables:
+### Connection
+
+The connection options can be provided as environment variables:
 
 - `BROKER_HOST`: To connect to. Example: `localhost`
 - `BROKER_USER`: Optional. For authenticated connections. Example `user`.
@@ -57,6 +79,32 @@ All the configurations can be provided as `env` variables:
 - `BROKER_RETRY_CONNECTION`: Set it as `true` to retry connecting if the first attempt fails.
 - `BROKER_TRANSPORT_EXCHANGE`: The topic exchange to use. See
 [RabbitMQ docs](https://www.rabbitmq.com/tutorials/tutorial-five-javascript.html).
+
+Or directly in the configure function:
+
+```javascript
+app.configure(broker.configure({
+  connection: {
+    host: 'myrabbitmq.com', // Default to process.env.BROKER_HOST
+    user: 'user', // default to process.env.BROKER_USER
+    password: 'password', // default to process.env.BROKER_PASSWORD
+    retry: false, // default to process.env.BROKER_RETRY_CONNECTION === 'true',
+  }
+}))
+```
+
+### Prefetch
+
+The prefect value can be useful to throttle the consumer. Once there are `prefetch` messages
+outstanding the RabbitMQ server will not send more messages to the service's method's consumer
+until one ore more have been acknowledge (that is when the method call returns).
+
+For more information please read the [official docs](http://www.squaremobius.net/amqp.node/channel_api.html#channel_prefetch).
+
+### Queue postfix
+
+Add an aditional postfix to the queue's names. The default queue name is `<service>-<method>` but if you provide this
+configuration it will be `<service>-<method><postfix>`.
 
 ## How it works
 

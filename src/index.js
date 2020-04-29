@@ -3,10 +3,6 @@ const { Consumer } = require('./broker')
 
 const { BROKER_TRANSPORT_EXCHANGE } = process.env
 
-if (!BROKER_TRANSPORT_EXCHANGE) {
-  throw new Error('Please provide the BROKER_TRANSPORT_EXCHANGE env variable to use the Broker transport')
-}
-
 /**
  * Create a function to configure the `Broker` transport that uses a one-way message broker
  * pattern to access to the services of the app.
@@ -32,6 +28,14 @@ if (!BROKER_TRANSPORT_EXCHANGE) {
  * 
  * It also sets the `brokerTransportReady` setting in the app and the event with the same name.
  *
+ * @param {Object} options
+ * @param {Object} [options.connection] an optional connection object with the `host`, `user`,
+ * `password`, `exchange` and `retry` to connect to the RabbitMQ instance.
+ * @param {Number} [options.prefetch] set the maximum number of messages sent over the channel of
+ * the consumers that can be awaiting acknowledgement.
+ * @param {String} [options.queuePostfix] to set a postfix string after the queue name.
+ * Example: If `queuePostfix` is `-dev` then it will create queues like `service-method-dev` instead
+ * of simply `service-method`. 
  * @param {Object} [options.services] explicitly declare which services with which methods must be
  *  exposed through this transport. If no `services` object is given it will expose all the services.
  *  By default it habilitates all the methods, but if you want to expose only some of them you can
@@ -43,9 +47,18 @@ if (!BROKER_TRANSPORT_EXCHANGE) {
  *  }
  *  ```
  */
-module.exports = ({ services }) => {
+function configure({ connection = {}, prefetch, queuePostfix, services } = {}) {
+  connection.exchange = connection.exchange || BROKER_TRANSPORT_EXCHANGE;
+
+  if (!connection.exchange) {
+    let message = 'Please provide an exchange in the connections options or set the'
+    message += ' BROKER_TRANSPORT_EXCHANGE env variable to use the Broker transport.'
+    throw new Error(message)
+  }
+
   return app => {
     app.set('brokerTransportReady', false)
+
     const appServices = Object.keys(app.services)
     const habilitatedServices = []
     const logger = createLogger('configure')
@@ -93,31 +106,31 @@ module.exports = ({ services }) => {
         const logger = createLogger(`${service}:${method}`)
         logger.info(`Habilitating method "${method}" for service "${service}" in the Broker transport`)
 
-        const queue = `${service}-${method}`
-        const consumer = new Consumer(BROKER_TRANSPORT_EXCHANGE, key, queue)
-        try {
-          await consumer.connect()
+        const queue = `${service}-${method}${queuePostfix}`
+        const consumer = new Consumer(connection.exchange, key, { connection, queue, prefetch })
+        await consumer.connect().then(() => {
           consumer.consume((data, routingKey) => {
-            try {
-              const params = { provider: 'broker' }
+            const params = { provider: 'broker' }
 
-              if (method === 'create') {
-                app.service(service).create(data, params)
-              } else {
-                const id = routingKey.split('.').slice(-1)[0]
-                app.service(service)[method](id, data, params)
-              }
-            } catch (err) {
-              logger.error(err)
+            if (method === 'create') {
+              return app.service(service).create(data, params)
             }
+
+            const id = routingKey.split('.').slice(-1)[0]
+            return app.service(service)[method](id, data, params)
           })
-        } catch (err) {
-          logger.error(err)
-        }
+        })
       })).then(() => {
         app.set('brokerTransportReady', true)
         app.emit('brokerTransportReady')
-      })
+      }).catch(err => logger.error(err))
     }))
   }
+}
+
+
+module.exports = {
+  configure,
+  Consumer,
+  Producer
 }
