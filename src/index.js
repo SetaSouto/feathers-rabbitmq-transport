@@ -110,6 +110,8 @@ function configure({ connection = {}, prefetch, queuePostfix, services } = {}) {
         const consumer = new Consumer(connection.exchange, key, { connection, queue, prefetch })
         await consumer.connect().then(() => {
           consumer.consume((data, routingKey) => {
+            logger.debug(data, routingKey)
+
             const params = { provider: 'broker' }
 
             if (method === 'create') {
@@ -123,6 +125,7 @@ function configure({ connection = {}, prefetch, queuePostfix, services } = {}) {
       })).then(() => {
         app.set('brokerTransportReady', true)
         app.emit('brokerTransportReady')
+        logger.info('Broker transport ready.')
       }).catch(err => logger.error(err))
     }))
   }
