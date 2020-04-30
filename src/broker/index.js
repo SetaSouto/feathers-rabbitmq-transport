@@ -144,6 +144,8 @@ class Consumer extends Broker {
    * sent over the channel of this consumer that can be awaiting acknowledgement.
    * @param {String} [options.queue] name of the queue to consume. Default to empty string
    * to generate a random one.
+   * @param {Boolean} [options.requeue] set to `true` to requeue the nacked messages.
+   * See: https://www.squaremobius.net/amqp.node/channel_api.html#channel_nack
    */
   constructor(exchange, key, options = {}) {
     super(exchange, options)
@@ -190,7 +192,7 @@ class Consumer extends Broker {
         await callback(JSON.parse(msg.content.toString()), msg.fields.routingKey)
         this.channel.ack(msg)
       } catch (err) {
-        this.channel.nack(msg);
+        this.channel.nack(msg, false, !!this.options.requeue);
         logger.error(err)
         logger.debug(msg.content.toString())
       }

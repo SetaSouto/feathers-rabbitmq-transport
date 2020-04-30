@@ -42,6 +42,9 @@ app.configure(broker.configure({
   // This will transform the queue's names from '<service>-<method>' to
   // '<service>-<method><postfix>'.
   queuePostfix: '-development',
+  // Requeue the nacked messages (when the method call fails). Default to false
+  // because it could generate infinite loops.
+  requeue: true
 }))
 
 // Perform a side effect after connection
@@ -105,6 +108,11 @@ For more information please read the [official docs](http://www.squaremobius.net
 
 Add an aditional postfix to the queue's names. The default queue name is `<service>-<method>` but if you provide this
 configuration it will be `<service>-<method><postfix>`.
+
+### Requeue
+
+The nacked messages (service method call failed) are discarded by default. If you want to requeue (and then reprocess) the messages
+that generats errors you can set this config to true.
 
 ## How it works
 

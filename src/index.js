@@ -36,6 +36,9 @@ const { BROKER_TRANSPORT_EXCHANGE } = process.env
  * @param {String} [options.queuePostfix] to set a postfix string after the queue name.
  * Example: If `queuePostfix` is `-dev` then it will create queues like `service-method-dev` instead
  * of simply `service-method`. 
+ * @param {Boolean} [options.requeue] if the method fails the message will be nacked. Setting this
+ * options as true will requeue the message to process it again. Use with warning because it could
+ * generate infinite loops.
  * @param {Object} [options.services] explicitly declare which services with which methods must be
  *  exposed through this transport. If no `services` object is given it will expose all the services.
  *  By default it habilitates all the methods, but if you want to expose only some of them you can
@@ -47,13 +50,17 @@ const { BROKER_TRANSPORT_EXCHANGE } = process.env
  *  }
  *  ```
  */
-function configure({ connection = {}, prefetch, queuePostfix, services } = {}) {
+function configure({ connection = {}, prefetch, queuePostfix, requeue, services } = {}) {
   connection.exchange = connection.exchange || BROKER_TRANSPORT_EXCHANGE;
 
   if (!connection.exchange) {
     let message = 'Please provide an exchange in the connections options or set the'
     message += ' BROKER_TRANSPORT_EXCHANGE env variable to use the Broker transport.'
     throw new Error(message)
+  }
+
+  if (requeue) {
+    logger.warn('Setting requeue to true could generate infinite loops.')
   }
 
   return app => {
@@ -107,7 +114,7 @@ function configure({ connection = {}, prefetch, queuePostfix, services } = {}) {
         logger.info(`Habilitating method "${method}" for service "${service}" in the Broker transport`)
 
         const queue = `${service}-${method}${queuePostfix}`
-        const consumer = new Consumer(connection.exchange, key, { connection, queue, prefetch })
+        const consumer = new Consumer(connection.exchange, key, { connection, prefetch, queue, requeue })
         await consumer.connect().then(() => {
           consumer.consume((data, routingKey) => {
             logger.debug(data, routingKey)
